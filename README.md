@@ -4,14 +4,14 @@ This software computes a tree-decomposition of the smallest width of a given gra
 
 ## Usage
 
-Read the graph in the .gr format from the standard input and write the resulting tree-decomposition in the .td format. See the PACE site mentioned above for
+Read the graph in the .gr format from the standard input and write the resulting tree-decomposition in the .td format to the standard output. See the PACE site linked above for
 these file formats.
 ```
 ./tw-ex
 ```
 ## Build
 
-Run `make`. In case of problems, try 'make clean' and then 'make'.
+Run `make`. In case of problems, try `make clean` and then `make`.
 
 ## License
 
