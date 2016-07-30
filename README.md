@@ -1,7 +1,6 @@
-# Exact tree-decomposition 
+# Exact treewidth
 
-This software computes a tree-decomposition of the smallerst width of
-a given graph.  It is part of a submission to the tw-exact track of the first Parameterized Algorithms and Computational Experiments Challenge ([PACE 2016](https://pacechallenge.wordpress.com/track-a-treewidth/)).  For the graph and tree-decomposition file format, see this PACE site.  The algorithm is sequenctial and implemented in C99.
+This software computes a tree-decomposition of the smallest width of a given graph.  It is part of a submission to the tw-exact track of the first Parameterized Algorithms and Computational Experiments Challenge ([PACE 2016](https://pacechallenge.wordpress.com/track-a-treewidth/)).  The algorithm is sequential and implemented in C99.
 
 ## Usage
 
