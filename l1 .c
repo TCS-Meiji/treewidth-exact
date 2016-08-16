@@ -14,7 +14,9 @@
 
 #define NB_MAX (1l << 20)
 #define HASH_FACTOR 4
-#define TRIE_FACTOR 20
+/*#define TRIE_FACTOR 20*/
+#define TRIE_FACTOR 100
+#define WIDTH_MAX 50
 
 typedef unsigned long long int LONG;
 typedef struct {
@@ -388,7 +390,13 @@ void L1extendBy(NODE* node, int v, LONG c, LONG neighb, LONG from) {
   }
   if (node->right != NULL && 
       ((c | neighb) & (1llu << node->v)) == 0) {
-    L1extendBy(node->right, v, c, neighb, from);
+    /* but fix Aug 09, 2016*/
+    if ((from & (1llu << node->v)) == 0) {
+      L1extendBy(node->right, v, c, neighb, 0);
+    }
+    else {
+      L1extendBy(node->right, v, c, neighb, from);
+    }
   }
 }
 
@@ -430,6 +438,7 @@ void L1decompose() {
     }
     if (solution < 0) {
       targetWidth++;
+      fprintf(stderr, "width = %d\n", targetWidth);
     }
   }
 #ifdef VERBOSE

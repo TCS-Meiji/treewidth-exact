@@ -14,7 +14,9 @@
 
 #define NB_MAX (1l << 20)
 #define HASH_FACTOR 4
-#define TRIE_FACTOR 20
+/*#define TRIE_FACTOR 20*/
+#define TRIE_FACTOR 50
+#define WIDTH_MAX 50
 
 typedef struct {
   unsigned long long a[K];
@@ -493,6 +495,10 @@ void L2extendByIterative(NODE* node, int v, BSET c, BSET neighb, BSET from) {
   int top = 0;
   while (top >= 0) {
     node = stack[top--];
+    /* bug fix Aig 09, 2016 */
+    if (!L2contains(from, node->v)) {
+      from = L2emptySet();
+    }
     node = node->right;
 #ifdef TRACE
     printf("%d:%d,", v, node->v);
@@ -674,6 +680,7 @@ void L2decompose() {
     }
     if (solution < 0) {
       targetWidth++;
+      fprintf(stderr, "width = %d\n", targetWidth);
     }
   }
 #ifdef VERBOSE

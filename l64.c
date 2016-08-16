@@ -15,6 +15,7 @@
 #define NB_MAX (1l << 20)
 #define HASH_FACTOR 4
 #define TRIE_FACTOR 20
+#define WIDTH_MAX 50
 
 typedef struct {
   unsigned long long a[K];
@@ -493,6 +494,10 @@ void L64extendByIterative(NODE* node, int v, BSET c, BSET neighb, BSET from) {
   int top = 0;
   while (top >= 0) {
     node = stack[top--];
+    /* bug fix Aig 09, 2016 */
+    if (!L64contains(from, node->v)) {
+      from = L64emptySet();
+    }
     node = node->right;
 #ifdef TRACE
     printf("%d:%d,", v, node->v);
@@ -674,6 +679,7 @@ void L64decompose() {
     }
     if (solution < 0) {
       targetWidth++;
+      fprintf(stderr, "width = %d\n", targetWidth);
     }
   }
 #ifdef VERBOSE

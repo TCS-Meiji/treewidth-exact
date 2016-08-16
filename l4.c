@@ -14,7 +14,9 @@
 
 #define NB_MAX (1l << 20)
 #define HASH_FACTOR 4
-#define TRIE_FACTOR 20
+/*#define TRIE_FACTOR 20*/
+#define TRIE_FACTOR 50
+#define WIDTH_MAX 50
 
 typedef struct {
   unsigned long long a[K];
@@ -161,6 +163,21 @@ static inline int L4contains(BSET s, int i) {
   int w = i / 64;
   int j = i % 64;
   return (s.a[w] & (1llu << j)) != 0;
+}
+
+static inline int L4firstSetBit(BSET s) {
+  for (int k = 0; k < K; k++) {
+    if (s.a[k] != 0) {
+      long long mask = 1;
+      for (int i = 0; i < 64; i++) {
+	if ((s.a[k] & mask) != 0) {
+	  return k * 64 + i;
+	}
+	mask << 1;
+      }
+    }
+  }
+  return -1;
 }
 
 static inline void L4remove_(BSET *s, int i) {
@@ -427,7 +444,6 @@ void L4registerBlock(BSET component, BSET delta) {
   }
 
   L4registerBlock0(component, neighb, delta);
-
 }
 
 void L4process(BLOCK *b) {
@@ -479,6 +495,10 @@ void L4extendByIterative(NODE* node, int v, BSET c, BSET neighb, BSET from) {
   int top = 0;
   while (top >= 0) {
     node = stack[top--];
+    /* bug fix Aig 09, 2016 */
+    if (!L4contains(from, node->v)) {
+      from = L4emptySet();
+    }
     node = node->right;
 #ifdef TRACE
     printf("%d:%d,", v, node->v);
@@ -660,6 +680,7 @@ void L4decompose() {
     }
     if (solution < 0) {
       targetWidth++;
+      fprintf(stderr, "width = %d\n", targetWidth);
     }
   }
 #ifdef VERBOSE
