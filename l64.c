@@ -40,35 +40,35 @@ typedef struct {
   long bi;
 } ENTRY;
 
-int n;
-BSET *neighborSets;
-ENTRY *hashTable;
-BSET all;
-BSET empty;
+static int n;
+static BSET *neighborSets;
+static ENTRY *hashTable;
+static BSET all;
+static BSET empty;
 
-unsigned long trieUsed;
-NODE *trieRoots[L];
-NODE *trieArea;
+static unsigned long trieUsed;
+static NODE *trieRoots[L];
+static NODE *trieArea;
 
-long nb0;
-long nb;
-long nbMax;
-long trieMax;
-long nHash;
-long nbHidden;
-BLOCK *blocks;
+static long nb0;
+static long nb;
+static long nbMax;
+static long trieMax;
+static long nHash;
+static long nbHidden;
+static BLOCK *blocks;
 
-int targetWidth;
-int solution;
+static int targetWidth;
+static int solution;
 
-char dumpPrefix[L];
+static char dumpPrefix[L];
 
-struct timespec start;
+static struct timespec start;
 
-void L64extendBy(NODE *node, int v, BSET c, BSET neighb, BSET from);
-void L64extendByIterative(NODE *node, int v, BSET c, BSET neighb, BSET from);
-void L64printSet(BSET s);
-void L64dumpTrie(NODE *node, int x);
+static void L64extendBy(NODE *node, int v, BSET c, BSET neighb, BSET from);
+static void L64extendByIterative(NODE *node, int v, BSET c, BSET neighb, BSET from);
+static void L64printSet(BSET s);
+static void L64dumpTrie(NODE *node, int x);
 
 static inline BSET L64emptySet() {
   BSET s;
@@ -212,7 +212,7 @@ static inline unsigned long L64hash(BSET s) {
   return h;
 }
 
-void L64allocate() {
+static void L64allocate() {
   nbMax = NB_MAX;
   long* trial; 
   while (1) {
@@ -239,7 +239,7 @@ void L64allocate() {
 #endif
 }
 
-void L64deallocate() {
+static void L64deallocate() {
   free(hashTable);
   free(trieArea);
   free(blocks);
@@ -248,7 +248,7 @@ void L64deallocate() {
 #endif
 }
 
-NODE* L64newNode(int v, BLOCK* block, NODE* left, NODE* right) {
+static NODE* L64newNode(int v, BLOCK* block, NODE* left, NODE* right) {
   if (trieUsed == trieMax) {
     fprintf(stderr, "Trie area exhausted\n");
     exit(1);
@@ -261,7 +261,7 @@ NODE* L64newNode(int v, BLOCK* block, NODE* left, NODE* right) {
   return &trieArea[trieUsed - 1];
 }
 
-void L64clear() {
+static void L64clear() {
   nb0 = 0;
   nb = 0;
   nbHidden = 0;
@@ -273,7 +273,7 @@ void L64clear() {
   memset(hashTable, 0, nHash * sizeof(ENTRY));
 }
 
-long L64getHash(BSET component) {
+static long L64getHash(BSET component) {
   unsigned long h = L64hash(component);
   while (!L64equals(hashTable[h].key, empty)) {
     if (L64equals(hashTable[h].key, component)) {
@@ -284,7 +284,7 @@ long L64getHash(BSET component) {
   return -1;
 }
 
-void L64putHash(BSET component, int bi) {
+static void L64putHash(BSET component, int bi) {
   unsigned long h = L64hash(component);
   while (!L64equals(hashTable[h].key, empty)) {
     if (L64equals(hashTable[h].key, component)) {
@@ -297,7 +297,7 @@ void L64putHash(BSET component, int bi) {
   hashTable[h].bi = bi;
 }
 
-BSET L64closedNeighbor(BSET c) {
+static BSET L64closedNeighbor(BSET c) {
   BSET cnb = c;
   for (int v = 0; v < n; v++) {
     if (L64contains(c, v)) {
@@ -307,7 +307,7 @@ BSET L64closedNeighbor(BSET c) {
   return cnb;
 }
 
-BSET L64saturate(BSET c) {
+static BSET L64saturate(BSET c) {
   BSET cnb = L64closedNeighbor(c);
   BSET neighb = L64diff(cnb, c);
   for (int v = 0; v < n; v++) {
@@ -320,7 +320,7 @@ BSET L64saturate(BSET c) {
   return c;
 }
 
-void L64registerBlock0(BSET component, BSET neighbors, BSET delta) {  
+static void L64registerBlock0(BSET component, BSET neighbors, BSET delta) {  
   if (L64getHash(component) >= 0) {
     return;
   }
@@ -358,7 +358,7 @@ void L64registerBlock0(BSET component, BSET neighbors, BSET delta) {
   #endif
 }
 
-void L64addHiddenBlock(BSET component, BSET neighbors, BSET delta) {
+static void L64addHiddenBlock(BSET component, BSET neighbors, BSET delta) {
   long b = L64getHash(component);
   if (b >= 0) {
     return;
@@ -375,7 +375,7 @@ void L64addHiddenBlock(BSET component, BSET neighbors, BSET delta) {
   L64putHash(component, nbMax - nbHidden);
 }
 
-void L64registerForVertex(int v, BLOCK *block) {
+static void L64registerForVertex(int v, BLOCK *block) {
 #ifdef DEBUG
   printf("registerForVertex %d:", v);
   L64printSet(block->component);
@@ -414,7 +414,7 @@ void L64registerForVertex(int v, BLOCK *block) {
   p->block = block;
 }
 
-void L64registerBlock(BSET component, BSET delta) {
+static void L64registerBlock(BSET component, BSET delta) {
 #ifdef TRACE
   printf("registering ");
   L64printSet(component);
@@ -445,7 +445,7 @@ void L64registerBlock(BSET component, BSET delta) {
   L64registerBlock0(component, neighb, delta);
 }
 
-void L64process(BLOCK *b) {
+static void L64process(BLOCK *b) {
   for (int v = 0; v < n; v++) {
     if (L64contains(b->neighbors, v)) {
       L64registerForVertex(v, b);
@@ -465,7 +465,7 @@ void L64process(BLOCK *b) {
 /*
       L64extendBy(trieRoots[v]->right, v, b->component,
           b->neighbors, empty);
-*/
+static */
       L64extendByIterative(trieRoots[v], v, b->component,
           b->neighbors, empty);
       if (solution >= 0) {
@@ -475,7 +475,7 @@ void L64process(BLOCK *b) {
   }
 }
 
-int L64anAbsorbable(BSET vertices, BSET neighbors) {
+static int L64anAbsorbable(BSET vertices, BSET neighbors) {
   for (int v = 0; v < n; v++) {
     if (L64contains(neighbors, v) &&
         L64isSubset(neighborSets[v], L64union_(vertices, neighbors))) {
@@ -485,7 +485,7 @@ int L64anAbsorbable(BSET vertices, BSET neighbors) {
   return -1;
 }
 
-void L64extendByIterative(NODE* node, int v, BSET c, BSET neighb, BSET from) {
+static void L64extendByIterative(NODE* node, int v, BSET c, BSET neighb, BSET from) {
   /* an entry in the stack means that the righ child of the node is
      still to be processed 
   */
@@ -570,7 +570,7 @@ void L64extendByIterative(NODE* node, int v, BSET c, BSET neighb, BSET from) {
   }
 }
 
-void L64extendBy(NODE* node, int v, BSET c, BSET neighb, BSET from) {
+static void L64extendBy(NODE* node, int v, BSET c, BSET neighb, BSET from) {
 #ifdef TRACE
   printf("%d:%d,", v, node->v);
   L64printSet(c);
@@ -637,7 +637,7 @@ void L64extendBy(NODE* node, int v, BSET c, BSET neighb, BSET from) {
 
 }
 
-void L64decompose() {
+static void L64decompose() {
 #ifdef VERBOSE
   printf("decomose enter\n");
 #endif
@@ -687,7 +687,7 @@ void L64decompose() {
 #endif
 }
 
-void L64printSet(BSET s) {
+static void L64printSet(BSET s) {
   for (int k = n - 1; k >= 0; k--) {
     if (L64contains(s, k)) {
       putchar('1');
@@ -698,7 +698,7 @@ void L64printSet(BSET s) {
   }
 }
 
-void L64dumpTrie(NODE* node, int x) {
+static void L64dumpTrie(NODE* node, int x) {
   if (node == NULL) {
     return;
   }
@@ -727,7 +727,7 @@ void L64dumpTrie(NODE* node, int x) {
   }
 }
 
-BAG L64makeBag(BSET s) {
+static BAG L64makeBag(BSET s) {
   BAG bag;
   bag.nv = L64bitCount(s);
   bag.vertices = (int*) malloc(sizeof(int) * bag.nv);
@@ -740,7 +740,7 @@ BAG L64makeBag(BSET s) {
   return bag;
 }
 
-int L64addBag(BSET s, TD* td) {
+static int L64addBag(BSET s, TD* td) {
   int k = td->nBag;
   if (k == n) {
     fprintf(stderr, "too many bags\n");
@@ -751,7 +751,7 @@ int L64addBag(BSET s, TD* td) {
   return k;
 }
 
-void L64addTDEdge(int k, int j, TD* td) {
+static void L64addTDEdge(int k, int j, TD* td) {
   int i = td->nEdge;
   if (i == n) {
     fprintf(stderr, "too many decomposition edges\n");
@@ -762,7 +762,7 @@ void L64addTDEdge(int k, int j, TD* td) {
   (td->nEdge)++;
 }
 
-int L64getComponents(BSET vertices, BSET components[]) {
+static int L64getComponents(BSET vertices, BSET components[]) {
   int p = 0;
   BSET vs = vertices;
   for (int v = 0; v < n; v++) {
@@ -790,7 +790,7 @@ int L64getComponents(BSET vertices, BSET components[]) {
   return p;
 }
 
-BLOCK* L64getBlock(BSET c) {
+static BLOCK* L64getBlock(BSET c) {
   long bi = L64getHash(c);
   if (bi < 0) {
     fprintf(stderr, "block not in hash unexpectedly");
@@ -800,7 +800,7 @@ BLOCK* L64getBlock(BSET c) {
 }
 
 
-int L64toTD(BLOCK* block, TD* td) {
+static int L64toTD(BLOCK* block, TD* td) {
   BLOCK* bStack[n];
   int aStack[n];
   BSET components[n];
