@@ -38,36 +38,36 @@ typedef struct {
   long bi;
 } ENTRY;
 
-int n;
-LONG *neighborSets;
-ENTRY *hashTable;
-LONG all;
+static int n;
+static LONG *neighborSets;
+static ENTRY *hashTable;
+static LONG all;
 
-unsigned long trieUsed;
-NODE *trieRoots[L];
-NODE *trieArea;
+static unsigned long trieUsed;
+static NODE *trieRoots[L];
+static NODE *trieArea;
   
-long nb0;
-long nb;
-long nbMax;
-long trieMax;
-long nHash;
-long nbHidden;
-BLOCK *blocks;
+static long nb0;
+static long nb;
+static long nbMax;
+static long trieMax;
+static long nHash;
+static long nbHidden;
+static BLOCK *blocks;
   
-int targetWidth;
-int solution;
+static int targetWidth;
+static int solution;
 
-char dumpPrefix[65];
+static char dumpPrefix[65];
 
-struct timespec start;
+static struct timespec start;
 
-void L1extendBy(NODE *node, int v, LONG c, LONG neighb, LONG from);
-int L1bitCount(LONG s);
-void L1printSet(LONG s);
-void L1dumpTrie(NODE *node, int x);
+static void L1extendBy(NODE *node, int v, LONG c, LONG neighb, LONG from);
+static int L1bitCount(LONG s);
+static void L1printSet(LONG s);
+static void L1dumpTrie(NODE *node, int x);
 
-void L1allocate() {
+static void L1allocate() {
   nbMax = NB_MAX;
   long* trial; 
   while (1) {
@@ -94,7 +94,7 @@ void L1allocate() {
 #endif
 }
 
-void L1deallocate() {
+static void L1deallocate() {
   free(hashTable);
   free(trieArea);
   free(blocks);
@@ -103,7 +103,7 @@ void L1deallocate() {
 #endif
 }
 
-NODE* L1newNode(int v, BLOCK* block, NODE* left, NODE* right) {
+static NODE* L1newNode(int v, BLOCK* block, NODE* left, NODE* right) {
   if (trieUsed == trieMax) {
     fprintf(stderr, "Trie area exhausted\n");
     exit(1);
@@ -116,7 +116,7 @@ NODE* L1newNode(int v, BLOCK* block, NODE* left, NODE* right) {
   return &trieArea[trieUsed - 1];
 }
   
-void L1clear() {
+static void L1clear() {
   nb0 = 0;
   nb = 0;
   nbHidden = 0;
@@ -128,7 +128,7 @@ void L1clear() {
   memset(hashTable, 0, nHash * sizeof(ENTRY));
 }
 
-long L1getHash(LONG component) {
+static long L1getHash(LONG component) {
   unsigned long h = (unsigned long) (component % nHash);
   while (hashTable[h].key != 0) {
     if (hashTable[h].key == component) {
@@ -139,7 +139,7 @@ long L1getHash(LONG component) {
   return -1;
 }
   
-void L1putHash(LONG component, int bi) {
+static void L1putHash(LONG component, int bi) {
   unsigned long h = (unsigned long) (component % nHash);
   while (hashTable[h].key != 0) {
     if (hashTable[h].key == component) {
@@ -152,7 +152,7 @@ void L1putHash(LONG component, int bi) {
   hashTable[h].bi = bi;
 }
   
-LONG L1closedNeighbor(LONG c) {
+static LONG L1closedNeighbor(LONG c) {
   LONG cnb = c;
   for (int v = 0; v < n; v++) {
     if ((c & (1llu << v)) != 0) {
@@ -162,7 +162,7 @@ LONG L1closedNeighbor(LONG c) {
   return cnb;
 }
   
-LONG L1saturate(LONG c) {
+static LONG L1saturate(LONG c) {
   LONG cnb = L1closedNeighbor(c);
   LONG neighb = cnb & ~c;
   for (int v = 0; v < n; v++) {
@@ -176,7 +176,7 @@ LONG L1saturate(LONG c) {
   return c;
 }
 
-void L1addHiddenBlock(LONG component, LONG neighbors, LONG delta) {
+static void L1addHiddenBlock(LONG component, LONG neighbors, LONG delta) {
   long b = L1getHash(component);
   if (b >= 0) {
     return;
@@ -193,7 +193,7 @@ void L1addHiddenBlock(LONG component, LONG neighbors, LONG delta) {
   L1putHash(component, nbMax - nbHidden);
 }
 
-void L1registerBlock0(LONG component, LONG neighbors, LONG delta) {  
+static void L1registerBlock0(LONG component, LONG neighbors, LONG delta) {  
   if (L1getHash(component) >= 0) {
     return;
   }
@@ -231,7 +231,7 @@ void L1registerBlock0(LONG component, LONG neighbors, LONG delta) {
   #endif
 }
 
-void L1registerForVertex(int v, BLOCK *block) {
+static void L1registerForVertex(int v, BLOCK *block) {
 #ifdef DEBUG
   printf("L1registerForVertex %d:", v);
   L1printSet(block->component);
@@ -267,7 +267,7 @@ void L1registerForVertex(int v, BLOCK *block) {
   p->block = block;
 }
 
-void L1registerBlock(LONG component, LONG delta) {
+static void L1registerBlock(LONG component, LONG delta) {
 #ifdef TRACE
   printf("registering ");
   L1printSet(component);
@@ -297,7 +297,7 @@ void L1registerBlock(LONG component, LONG delta) {
   L1registerBlock0(component, neighb, delta);
 }
 
-void L1process(BLOCK *b) {
+static void L1process(BLOCK *b) {
   for (int v = 0; v < n; v++) {
     if ((b->neighbors & (1llu << v)) != 0) {
       L1registerForVertex(v, b);
@@ -322,7 +322,7 @@ void L1process(BLOCK *b) {
   }
 }
 
-int L1anAbsorbable(LONG vertices, LONG neighbors) {
+static int L1anAbsorbable(LONG vertices, LONG neighbors) {
   for (int v = 0; v < n; v++) {
     if ((neighbors & (1llu << v)) !=0 &&
         neighborSets[v] & ~(vertices | neighbors) == 0) {
@@ -332,7 +332,7 @@ int L1anAbsorbable(LONG vertices, LONG neighbors) {
   return -1;
 }
 
-void L1extendBy(NODE* node, int v, LONG c, LONG neighb, LONG from) {
+static void L1extendBy(NODE* node, int v, LONG c, LONG neighb, LONG from) {
 #ifdef TRACE
   printf("%d:%d,", v, node->v);
   L1printSet(c);
@@ -400,7 +400,7 @@ void L1extendBy(NODE* node, int v, LONG c, LONG neighb, LONG from) {
   }
 }
 
-void L1decompose() {
+static void L1decompose() {
 #ifdef VERBOSE
   printf("decomose enter\n");
 #endif
@@ -446,7 +446,7 @@ void L1decompose() {
 #endif
 }
 
-int L1bitCount(LONG s) {
+static int L1bitCount(LONG s) {
   int k = 0;
   for (int i = 0; i < n; i++) {
     if ((s & (1llu << i)) != 0) {
@@ -456,7 +456,7 @@ int L1bitCount(LONG s) {
   return k;
 }
  
-void L1printSet(LONG s) {
+static void L1printSet(LONG s) {
   for (int k = n - 1; k >= 0; k--) {
     if ((s & (1llu << k)) != 0) {
       putchar('1');
@@ -467,7 +467,7 @@ void L1printSet(LONG s) {
   }
 }
 
-void L1dumpTrie(NODE* node, int x) {
+static void L1dumpTrie(NODE* node, int x) {
   if (node == NULL) {
     return;
   }
@@ -496,7 +496,7 @@ void L1dumpTrie(NODE* node, int x) {
   }
 }
 
-BAG L1makeBag(LONG s) {
+static BAG L1makeBag(LONG s) {
   BAG bag;
   bag.nv = L1bitCount(s);
   bag.vertices = (int*) malloc(sizeof(int) * bag.nv);
@@ -509,7 +509,7 @@ BAG L1makeBag(LONG s) {
   return bag;
 }
 
-int L1addBag(LONG s, TD* td) {
+static int L1addBag(LONG s, TD* td) {
   int k = td->nBag;
   if (k == n) {
     fprintf(stderr, "too many bags\n");
@@ -520,7 +520,7 @@ int L1addBag(LONG s, TD* td) {
   return k;
 }
 
-void L1addTDEdge(int k, int j, TD* td) {
+static void L1addTDEdge(int k, int j, TD* td) {
   int i = td->nEdge;
   if (i == n) {
     fprintf(stderr, "too many decomposition edges\n");
@@ -531,7 +531,7 @@ void L1addTDEdge(int k, int j, TD* td) {
   (td->nEdge)++;
 }
 
-int L1getComponents(LONG vertices, LONG components[]) {
+static int L1getComponents(LONG vertices, LONG components[]) {
   int p = 0;
   LONG vs = vertices;
   for (int v = 0; v < n; v++) {
@@ -557,7 +557,7 @@ int L1getComponents(LONG vertices, LONG components[]) {
   return p;
 }
 
-BLOCK L1getBlock(LONG c) {
+static BLOCK L1getBlock(LONG c) {
   long bi = L1getHash(c);
   if (bi < 0) {
     fprintf(stderr, "block not in hash unexpectedly");
@@ -567,7 +567,7 @@ BLOCK L1getBlock(LONG c) {
 }
 
 
-int L1toTD(BLOCK block, TD* td) {
+static int L1toTD(BLOCK block, TD* td) {
   if (L1bitCount(block.component) + L1bitCount(block.neighbors)
       <= targetWidth + 1) {
     return L1addBag(block.component | block.neighbors, td);
